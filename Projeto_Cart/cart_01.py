@@ -124,8 +124,9 @@ async def retornar_emails(dominio: str):
     for user in db_usuarios:
         if user.email.split("@")[1] == dominio:
             emails.append(user.email)
-            return emails
-    return FALHA
+            if not emails:
+                return FALHA
+    return emails
 
 # Se não existir usuário com o id_usuario retornar falha, 
 # senão cria um endereço, vincula ao usuário e retornar OK
@@ -165,6 +166,13 @@ async def criar_produto(produto: Produto):
     return FALHA
 
 
+@app.get("/produto/")
+def valida_produto(id:int):
+    for prod in db_produtos:
+        if prod.id == id:
+            return prod
+    return FALHA
+
 # Se não existir produto com o id_produto retornar falha, 
 # senão deleta produto correspondente ao id_produto e retornar OK
 # (lembrar de desvincular o produto dos carrinhos do usuário)
@@ -172,20 +180,57 @@ async def criar_produto(produto: Produto):
 async def deletar_produto(id_produto: int):
     return OK
 
+
+
 # Se não existir usuário com o id_usuario ou id_produto retornar falha, 
 # se não existir um carrinho vinculado ao usuário, crie o carrinho
 # e retornar OK
 # senão adiciona produto ao carrinho e retornar OK
 @app.post("/carrinho/{id_usuario}/{id_produto}/")
-async def adicionar_carrinho(id_usuario: int, id_produto: int):
-    return OK
-       
+async def adicionar_carrinho(id_usuario: int, id_produto: int): 
+    
+    usuarioExiste = False
+    produtoExiste = False
+    carrinhoExiste = False
+    
+    for user in db_usuarios:
+        if user.id == id_usuario:
+            usuarioExiste = True
+        
+    if usuarioExiste == False:
+        return FALHA
 
+    for prod in db_produtos:
+        if prod.id == id_produto:
+            produtoExiste = True
+        
+    if produtoExiste == False:
+        return FALHA
+        
+    for carrinho in db_carrinhos:
+        if carrinho.id_usuario == id_usuario:
+            carrinhoExiste = True
+            
+    if usuarioExiste and produtoExiste:
+        if carrinhoExiste:
+            carrinho.id_produtos.append(prod)
+            carrinho.preco_total += prod.preco
+            carrinho.quantidade_de_produtos = len(carrinho.id_produtos)
+            return OK
+        else:
+            lista_prod = CarrinhoDeCompras(id_usuario=id_usuario, id_produtos=[prod], 
+                                           preco_total=prod.preco, quantidade_de_produtos=1)
+            db_carrinhos.append(lista_prod)
+            return OK
+    return FALHA
+                 
 # Se não existir carrinho com o id_usuario retornar falha, 
 # senão retorna o carrinho de compras.
 @app.get("/carrinho/{id_usuario}/")
 async def retornar_carrinho(id_usuario: int):
-    return CarrinhoDeCompras
+    for carrinho in db_carrinhos:
+        if carrinho.id == id_usuario:
+            return CarrinhoDeCompras
 
 ## =============================================
 ## VALIDAR

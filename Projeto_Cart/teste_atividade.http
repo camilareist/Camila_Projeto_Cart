@@ -14,16 +14,6 @@ content-type: application/json
 }
 
 ######################
-
-GET http://127.0.0.1:8000/usuario
-
-
-
-###
-
-GET http://127.0.0.1:8000/usuarios/emails/?dominio=camila
-
-
 #######################################
 # Pegar usuário
 GET http://127.0.0.1:8000/usuario?id=1 HTTP/1.1
@@ -68,9 +58,20 @@ content-type: application/json
 
 ###############
 
-GET http://127.0.0.1:8000/produto
+GET http://127.0.0.1:8000/produto?id=1
 
 
 ##########
 DELETE http://127.0.0.1:8000/usuario?id=1 HTTP/1.1
+content-type: application/json
+
+
+####################
+
+POST http://127.0.0.1:8000/carrinho/1/1 HTTP/1.1
+content-type: application/json
+
+
+########
+GET http://127.0.0.1:8000/carrinho/1/1 HTTP/1.1
 content-type: application/json
