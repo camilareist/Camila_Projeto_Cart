@@ -20,9 +20,14 @@ GET http://127.0.0.1:8000/usuario?id=1 HTTP/1.1
 content-type: application/json
 
 
+# Pegar usuário NOME
+###############
+GET http://127.0.0.1:8000/usuario/nome?nome=teste HTTP/1.1
+content-type: application/json
+
 #####
 
-GET http://127.0.0.1:8000/usuario?id=1?/enderecos/ HTTP/1.1
+GET http://127.0.0.1:8000/usuario/1/endereco HTTP/1.1
 content-type: application/json
 
 
@@ -57,7 +62,7 @@ content-type: application/json
 }
 
 ###############
-
+# CONSULTAR PRODUTO
 GET http://127.0.0.1:8000/produto?id=1
 
 
@@ -67,11 +72,27 @@ content-type: application/json
 
 
 ####################
-
+# CRIAR O CARRINHO 
 POST http://127.0.0.1:8000/carrinho/1/1 HTTP/1.1
 content-type: application/json
 
 
 ########
-GET http://127.0.0.1:8000/carrinho/1/1 HTTP/1.1
+# CONSULTAR VALOR DO CARRINHO
+GET http://127.0.0.1:8000/carrinho/valor/1 HTTP/1.1
 content-type: application/json
+
+########
+# RETORNAR O CARRINHO 
+GET http://127.0.0.1:8000/carrinho/1 HTTP/1.1
+content-type: application/json
+
+
+###############
+DELETE http://127.0.0.1:8000/produto/1
+
+
+
+###############
+DELETE http://127.0.0.1:8000/carrinho/1
+
