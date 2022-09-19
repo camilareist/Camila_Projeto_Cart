@@ -9,6 +9,7 @@ FALHA = "FALHA"
 
 # Classe representando os dados do endereço do cliente
 class Endereco(BaseModel):
+    id: int
     rua: str
     cep: str
     cidade: str
@@ -45,7 +46,13 @@ db_produtos = []
 db_end = []
 db_carrinhos = []
 
-# OK          
+
+def enderecos_usuario(id_usuario: int):
+    for endereco in db_end:
+        if endereco.usuario.id == id_usuario:
+            return endereco.enderecos
+
+     
 # Criar um usuário,
 # se tiver outro usuário com o mesmo ID retornar falha, 
 # se o email não tiver o @ retornar falha, 
@@ -68,7 +75,6 @@ async def criar_usuário(user: Usuario):
 
     return FALHA
 
-# OK
 # Se o id do usuário existir, retornar os dados do usuário
 # senão retornar falha
 @app.get("/usuario/")
@@ -78,7 +84,6 @@ async def retornar_usuario(id: int):
             return user
     return FALHA
         
-# OK
 # Se existir um usuário com exatamente o mesmo nome, retornar os dados do usuário
 # senão retornar falha
 @app.get("/usuario/nome")
@@ -284,6 +289,7 @@ async def bem_vinda():
 async def retornar_enderecos_do_usuario(id_usuario: int):
     
     usuarioExiste = False
+    existeEndereco = enderecos_usuario(id_usuario)
     
     for user in db_usuarios:
         if user.id == id_usuario:
@@ -291,12 +297,12 @@ async def retornar_enderecos_do_usuario(id_usuario: int):
             
     if usuarioExiste == False:
         return FALHA
-    else:   
-        for user in db_end:
-            if user.usuario.id == id_usuario:
-                return user.enderecos
-            else:
-                return []
+    else:
+        if existeEndereco:
+            return existeEndereco
+        else:
+            return []
+
             
             
 # Se não existir produto com o id_produto retornar falha, 
@@ -326,13 +332,15 @@ async def deletar_produto(id_produto: int):
         carrinho.produtos.remove(produto)
         return OK
 
-
-# ===============================================================
-# CORRIGIR
-# ===============================================================
 # Se não existir endereço com o id_endereco retornar falha, 
 # senão deleta endereço correspondente ao id_endereco e retornar OK
 # (lembrar de desvincular o endereço ao usuário)
-@app.delete("/endereco/{id_endereco}/")
-async def deletar_endereco(id_endereco: int):
-    pass
+@app.delete("/usuario/{id_usuario}/endereco/{id_endereco}")
+async def deletar_endereco(id_usuario: int, id_endereco: int):
+    existeEnderecos = enderecos_usuario(id_usuario)
+    if existeEnderecos:
+        for endereco in existeEnderecos:
+            if endereco.id == id_endereco:
+                existeEnderecos.remove(endereco)
+                return OK
+    return FALHA

@@ -35,16 +35,17 @@ content-type: application/json
 ############  endereço  ###############
 #######################################
 
-# Criar endereço
+# Criar endereço 1
 POST http://127.0.0.1:8000/endereco/1 HTTP/1.1
 content-type: application/json
 
 {
+    "id": "1",
     "rua": "Rua Ladrilhada",
     "cep": "99999-999",
     "cidade": "São Paulo",
     "estado": "SP"
-}
+}   
 
 #######################################
 ############  produto  ################
@@ -95,4 +96,8 @@ DELETE http://127.0.0.1:8000/produto/1
 
 ###############
 DELETE http://127.0.0.1:8000/carrinho/1
+
+
+###############
+DELETE http://127.0.0.1:8000/usuario/1/endereco/1
 
