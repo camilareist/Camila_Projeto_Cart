@@ -7,6 +7,10 @@ app = FastAPI()
 OK = "OK"
 FALHA = "FALHA"
 
+# ==========================================
+# CLASSES 
+# ==========================================
+
 # Classe representando os dados do endereço do cliente
 class Endereco(BaseModel):
     id: int
@@ -40,18 +44,56 @@ class CarrinhoDeCompras(BaseModel):
     produtos: List[Produto] = []
     preco_total: float
     quantidade_de_produtos: int
+    
+    
+# ==========================================
+# MEMORIA 
+# ==========================================
 
 db_usuarios = []
 db_produtos = []
 db_end = []
 db_carrinhos = []
 
+# ==========================================
+# VALIDAÇÕES
+# ==========================================
 
+# USUARIO
+def retornar_usuario_por_id(id_usuario: int):
+    for user in db_usuarios:
+        if user.id == id_usuario:
+            return user
+        
+def retornar_usuario_por_nome(nome: str):
+    users = []
+    for user in db_usuarios:
+        if user.nome.split()[0] == nome:
+            users.append(user)
+            return users
+
+# ENDERECO
 def enderecos_usuario(id_usuario: int):
     for endereco in db_end:
         if endereco.usuario.id == id_usuario:
             return endereco.enderecos
+        
+# CARRINHO
+def retornar_carrinho(id_usuario: int):
+    for carrinho in db_carrinhos:
+        if carrinho.id_usuario == id_usuario:
+            return carrinho
+        
+# PRODUTO
+def valida_produto(id:int):
+    for prod in db_produtos:
+        if prod.id == id:
+            return prod
+        
 
+# ==========================================
+# REGRAS 
+# ==========================================
      
 # Criar um usuário,
 # se tiver outro usuário com o mesmo ID retornar falha, 
@@ -79,21 +121,27 @@ async def criar_usuário(user: Usuario):
 # senão retornar falha
 @app.get("/usuario/")
 async def retornar_usuario(id: int):
-    for user in db_usuarios:
-        if user.id == id:
-            return user
-    return FALHA
+    
+    user = retornar_usuario_por_id(id)
+    
+    if user:
+        return user
+    else:
+        return FALHA
         
 # Se existir um usuário com exatamente o mesmo nome, retornar os dados do usuário
 # senão retornar falha
 @app.get("/usuario/nome")
 async def retornar_usuario_com_nome(nome: str):
-    for user in db_usuarios:
-        if user.nome == nome:
-            return user
-    return FALHA
+    
+    user_name = retornar_usuario_por_nome(nome)
+    
+    if user_name:
+        return user_name
+    else:
+        return FALHA
                 
-# OK          
+          
 # Retornar todos os emails que possuem o mesmo domínio
 # (domínio do email é tudo que vêm depois do @)
 # senão retornar falha
@@ -107,20 +155,22 @@ async def retornar_emails(dominio: str):
                 return FALHA
     return emails
 
-# OK
+
 # Se não existir usuário com o id_usuario retornar falha, 
 # senão cria um endereço, vincula ao usuário e retornar OK
 @app.post("/endereco/{id_usuario}/")
 async def criar_endereco(endereco: Endereco, id_usuario: int):
-    for user in db_usuarios:
-        if user.id == id_usuario:
-            lista_enderecos = ListaDeEnderecosDoUsuario(
-                usuario=user, enderecos=[endereco])
-            db_end.append(lista_enderecos)
-            return OK
+
+    userExiste = retornar_usuario_por_id(id_usuario)
+    
+    if userExiste:
+        lista_enderecos = ListaDeEnderecosDoUsuario(
+            usuario=userExiste, enderecos=[endereco])
+        db_end.append(lista_enderecos)
+        return OK
     return FALHA
 
-# OK
+
 # Se tiver outro produto com o mesmo ID retornar falha, 
 # senão cria um produto e retornar OK
 @app.post("/produto/")
@@ -139,15 +189,6 @@ async def criar_produto(produto: Produto):
 
     return FALHA
 
-
-@app.get("/produto/")
-def valida_produto(id:int):
-    for prod in db_produtos:
-        if prod.id == id:
-            return prod
-    return FALHA
-
-# OK 
 # Se não existir usuário com o id_usuario ou id_produto retornar falha, 
 # se não existir um carrinho vinculado ao usuário, crie o carrinho
 # e retornar OK
@@ -190,7 +231,7 @@ async def adicionar_carrinho(id_usuario: int, id_produto: int):
             return OK
     return FALHA
 
-# OK                
+               
 # Se não existir carrinho com o id_usuario retornar falha, 
 # senão retorna o carrinho de compras.
 @app.get("/carrinho/{id_usuario}/")
@@ -205,24 +246,18 @@ async def retornar_carrinho(id_usuario: int):
     if carrinhoExiste == False:
         return FALHA
     else:
-        return carrinho
+        return carrinho    
     
-    
-# OK
 # Se não existir carrinho com o id_usuario retornar falha, 
 # senão retorna o o número de itens e o valor total do carrinho de compras.
 @app.get("/carrinho/valor/{id_usuario}/")
 async def retornar_total_carrinho(id_usuario: int):
     
-    carrinhoExiste = False
+    carrinhoExiste = retornar_carrinho(id_usuario)
     valor_total = 0
     numero_itens = 0
     
-    for carrinho in db_carrinhos:
-        if carrinho.id_usuario == id_usuario:
-            carrinhoExiste = True
-            
-    if carrinhoExiste == False:
+    if not carrinhoExiste:
         return FALHA
     else:
         for produtos in db_carrinhos:
@@ -232,19 +267,18 @@ async def retornar_total_carrinho(id_usuario: int):
     if valor_total and numero_itens > 0:
         return f'O carrinho possui {numero_itens} itens e o valor total é de R$ {valor_total}' 
             
-
-# OK          
+      
 # Se não existir usuário com o id_usuario retornar falha, 
 # senão deleta o carrinho correspondente ao id_usuario e retornar OK
 @app.delete("/carrinho/{id_usuario}/")
 async def deletar_carrinho(id_usuario: int):
+
     for user in db_carrinhos:
         if user.id_usuario == id_usuario:
             db_carrinhos.remove(user)
             return OK
         
     return FALHA
-
 
 # Se o id do usuário existir, deletar o usuário e retornar OK
 # senão retornar falha
@@ -272,14 +306,7 @@ async def deletar_usuario(id: int):
                     return OK 
                 return FALHA
 
-
-@app.get("/")
-async def bem_vinda():
-    site = "Seja bem vinda"
-    return site.replace('\n', '')
-
-
-# OK
+    
 # Se não existir usuário com o id_usuario retornar falha, 
 # senão retornar uma lista de todos os endereços vinculados ao usuário
 # caso o usuário não possua nenhum endereço vinculado a ele, retornar 
@@ -288,21 +315,16 @@ async def bem_vinda():
 @app.get("/usuario/{id_usuario}/endereco/")
 async def retornar_enderecos_do_usuario(id_usuario: int):
     
-    usuarioExiste = False
+    usuario = retornar_usuario_por_id(id_usuario)
     existeEndereco = enderecos_usuario(id_usuario)
     
-    for user in db_usuarios:
-        if user.id == id_usuario:
-            usuarioExiste = True
-            
-    if usuarioExiste == False:
+    if not usuario: 
         return FALHA
     else:
         if existeEndereco:
             return existeEndereco
         else:
             return []
-
             
             
 # Se não existir produto com o id_produto retornar falha, 
@@ -344,3 +366,20 @@ async def deletar_endereco(id_usuario: int, id_endereco: int):
                 existeEnderecos.remove(endereco)
                 return OK
     return FALHA
+
+
+@app.get("/produto/")
+async def produto(id: int):
+    
+    produtoExiste = valida_produto(id)
+    
+    if produtoExiste:
+        return produtoExiste
+    else:
+        return FALHA
+    
+
+@app.get("/")
+async def bem_vinda():
+    site = "Seja bem vinda"
+    return site.replace('\n', '')
