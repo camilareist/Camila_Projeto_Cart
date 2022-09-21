@@ -2,7 +2,7 @@ Olá,
 
 Neste projeto estamos desenvolvendo um carrinho de compras.
 
-O projeto requer a instalação do fastapi, utilizando o comando abaixo no terminal:
+O projeto requer a instalação do fastapi, utilizando no terminal o comando:
 pip install fastapi
 
 Nesta etapa, nossa API para o carrinho de compras irá:
